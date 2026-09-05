@@ -4,6 +4,12 @@ function startGame(gameName) {
       alert("ACCESS DENIED: Please enter your name to play.");
       document.getElementById('playerName').focus(); 
     } else {
-      alert("Welcome " + playerName + "! Launching " + gameName + "...");
+       localStorage.setItem('currentPlayer', playerName);
+       if(gameName==="Snake Game"){
+        window.location.href = "snake_game.html";
+       }
+       else if(gameName==="Rocket Shoot"){
+        window.location.href = "rocket_game.html";
+       }
       }
   }

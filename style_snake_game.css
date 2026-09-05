@@ -1,0 +1,34 @@
+body {
+      background-color: #0b0c15; 
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 8px;
+    }
+h1 {
+      margin-bottom: 10px;
+    }
+.score-board {
+      font-family: 'Tiny5', sans-serif; 
+      font-size: 3.5rem;
+      font-weight: 900;
+      margin: 0 0 15px 0;
+      letter-spacing: 2px;
+      color: #15f03d;
+    }
+#gameCanvas {
+      border: 3px solid #4CAF50;
+      background-color: #000000;
+      box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+    }
+.instructions {
+      margin-top: 15px;
+      color: #aaaaaa;
+      font-size: 0.9rem;
+    }
