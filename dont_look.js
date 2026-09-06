@@ -265,4 +265,111 @@ function closeNote(){
   pendingNoteIndex = -1;
   state = 'playing';
 }
+function pickEntityTarget(){
+  if(Math.random() < 0.35){
+    entity.target = { x: player.x, y: player.y };
+  } else {
+    const r = centers[Math.floor(Math.random()*centers.length)];
+    entity.target = { x: r.x + (Math.random()*80-40), y: r.y + (Math.random()*80-40) };
+  }
+}
+function updateEntity(dt){
+  if(entity.idleTimer > 0){ entity.idleTimer -= dt; return; }
+  if(!entity.target || Math.hypot(entity.target.x-entity.x, entity.target.y-entity.y) < 14){
+    if(Math.random() < 0.25){ entity.idleTimer = 1 + Math.random()*2; }
+    pickEntityTarget();
+    return;
+  }
+  const dx = entity.target.x - entity.x, dy = entity.target.y - entity.y;
+  const dist = Math.hypot(dx,dy) || 1;
+  const speed = (Math.hypot(entity.target.x-player.x, entity.target.y-player.y) < 30) ? ENTITY_SPEED_CURIOUS : ENTITY_SPEED;
+  moveWithCollision(entity, (dx/dist)*speed*dt, (dy/dist)*speed*dt, ENTITY_RADIUS);
+}
+
+function triggerDeath(){
+  state = 'dead';
+  flashAlpha = 1; shakeTimer = 0.35;
+  playDeath();
+  setTimeout(()=>{
+    document.getElementById('endTitle').textContent = 'You looked.';
+    document.getElementById('endLede').textContent = 'It saw you seeing it.';
+    document.getElementById('endScreen').classList.remove('hidden');
+  }, 650);
+}
+function triggerWin(){
+  state = 'won';
+  playWin();
+  document.getElementById('endTitle').textContent = "You Escaped.";
+  document.getElementById('endLede').textContent = 'Hawkins Lab is behind you now.';
+  document.getElementById('endScreen').classList.remove('hidden');
+}
+ 
+function update(dt){
+  toasts = toasts.filter(t=>t.until > performance.now());
+  if(toasts.length !== document.getElementById('toasts').children.length) renderToasts();
+ 
+  if(state !== 'playing'){
+    if(shakeTimer>0) shakeTimer = Math.max(0, shakeTimer-dt);
+    if(flashAlpha>0) flashAlpha = Math.max(0, flashAlpha - dt*2.2);
+    return;
+  }
+
+  let mx=0, my=0;
+  if(keys['w']||keys['arrowup']) my -= 1;
+  if(keys['s']||keys['arrowdown']) my += 1;
+  if(keys['a']||keys['arrowleft']) mx -= 1;
+  if(keys['d']||keys['arrowright']) mx += 1;
+  if(mx||my){
+    const len = Math.hypot(mx,my);
+    mx/=len; my/=len;
+    moveWithCollision(player, mx*PLAYER_SPEED*dt, my*PLAYER_SPEED*dt, PLAYER_RADIUS);
+  }
+  player.facing = Math.atan2(mouse.y - canvas.height/2, mouse.x - canvas.width/2);
+ 
+  updateEntity(dt);
+
+  POS.notes.forEach((p,i)=>{
+    if(!notes[i] && Math.hypot(player.x-p.x, player.y-p.y) < PICKUP_RADIUS){
+      playPickup();
+      openNote(i);
+    }
+  });
+  if(!hasKey && Math.hypot(player.x-POS.key.x, player.y-POS.key.y) < PICKUP_RADIUS){
+    hasKey = true; updateHUD(); playPickup();
+    showToast('Found the key. Cold, like it has been in a fridge.');
+  }
+  if(Math.hypot(player.x-POS.exit.x, player.y-POS.exit.y) < EXIT_RADIUS){
+    if(notes.every(n=>n) && hasKey){ triggerWin(); }
+  }
+
+  const dx = entity.x-player.x, dy = entity.y-player.y;
+  const dist = Math.hypot(dx,dy);
+  let diff = Math.atan2(dy,dx) - player.facing;
+  diff = Math.atan2(Math.sin(diff), Math.cos(diff)); // normalize angle
+  const inCone = Math.abs(diff) < CONE_HALF_ANGLE && dist < CONE_RANGE;
+  const seen = inCone && hasLineOfSight(player.x,player.y, entity.x,entity.y);
+  
+  if(seen){ seenTimer = Math.min(SEEN_LIMIT+0.2, seenTimer + dt); }
+  else { seenTimer = Math.max(0, seenTimer - dt*SEEN_DECAY); }
+  if(seenTimer >= SEEN_LIMIT){ triggerDeath(); return; }
+ 
+  const proximity = Math.max(0, 1 - dist/DREAD_RANGE);
+  heartbeatCooldown -= dt;
+  if(heartbeatCooldown <= 0 && proximity > 0.05){
+    heartbeat(proximity);
+    heartbeatCooldown = 0.9 - proximity*0.55;
+  }
+  ambientCooldown -= dt;
+  if(ambientCooldown <= 0){
+    tone(90+Math.random()*40, 0.35, 'triangle', 0.02);
+    ambientCooldown = 7 + Math.random()*9;
+  }
+
+  const bar = document.getElementById('dangerBar');
+  const wrap = document.getElementById('dangerWrap');
+  const frac = Math.min(1, seenTimer/SEEN_LIMIT);
+  bar.style.width = (frac*100)+'%';
+  wrap.style.opacity = frac>0.03 ? 1 : 0;
+}
+
 })
