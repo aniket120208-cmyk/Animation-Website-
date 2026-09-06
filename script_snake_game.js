@@ -3,6 +3,8 @@ const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
+const appleImg = new Image();
+appleImg.src = 'apple.png';
 let score = 0;
 let dx = gridSize;
 let dy = 0;
@@ -62,8 +64,7 @@ function getRandomFoodPosition() {
     return { x: foodX, y: foodY };
 }
 function drawFood() {
-    ctx.fillStyle = '#FF5722';
-    ctx.fillRect(food.x, food.y, gridSize, gridSize);
+    ctx.drawImage(appleImg, food.x, food.y, gridSize, gridSize);
 }
 function changeDirection(event) {
     const keyPressed = event.keyCode;
