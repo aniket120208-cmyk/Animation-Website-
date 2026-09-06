@@ -153,4 +153,116 @@ function heartbeat(strength){
   if(muted || !actx || strength<=0) return;
   tone(70, 0.1, 'sine', 0.02+strength*0.05);
 }
+let state = 'start'; 
+const player = { x:0, y:0, facing:0 };
+const entity = { x:0, y:0, target:null, idleTimer:0 };
+let mouse = { x:0, y:0 };
+let keys = {};
+let notes = [false,false,false];
+let hasKey = false;
+let seenTimer = 0;
+let heartbeatCooldown = 0;
+let ambientCooldown = 6+Math.random()*6;
+let flashAlpha = 0, shakeTimer = 0;
+let toasts = [];
+let last = 0;
+ 
+const NOTE_TEXT = [
+  "Do not look at it more than half as second. It learns the shape of whatever watches it back.",
+  "Dr. Salunkhe insisted we keep working after the incident. I told him the cameras don't show anything because there's nothing to show — it isn't there unless you make it there. Looking is what gives it a shape.",
+  "Power's been cut to hawkins lab for six days. Something down here doesn't need light to move. It only needs you to give it your eyes."
+];
+
+function itemPositions(){
+  return {
+    notes: [centers[1], centers[2], centers[3]],
+    key: centers[4],
+    exit: { x: centers[5].x+80, y: centers[5].y },
+  };
+}
+const POS = itemPositions();
+ 
+function resetGame(){
+  player.x = centers[0].x; player.y = centers[0].y; player.facing = 0;
+  entity.x = centers[3].x; entity.y = centers[3].y; entity.target = null; entity.idleTimer = 0;
+  notes = [false,false,false];
+  hasKey = false;
+  seenTimer = 0;
+  flashAlpha = 0; shakeTimer = 0;
+  toasts = [];
+  updateHUD();
+}
+ 
+function updateHUD(){
+  document.getElementById('dotA').classList.toggle('on', notes[0]);
+  document.getElementById('dotB').classList.toggle('on', notes[1]);
+  document.getElementById('dotC').classList.toggle('on', notes[2]);
+  const dk = document.getElementById('dotKey');
+  dk.classList.toggle('key-on', hasKey);
+}
+ 
+function showToast(text, dur){
+  toasts.push({ text, until: performance.now() + (dur||2200) });
+  renderToasts();
+}
+function renderToasts(){
+  const el = document.getElementById('toasts');
+  el.innerHTML = '';
+  toasts.forEach(t=>{
+    const d = document.createElement('div');
+    d.className='toast'; d.textContent = t.text;
+    el.appendChild(d);
+  });
+}
+window.addEventListener('keydown', e=>{
+  keys[e.key.toLowerCase()] = true;
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+  if(state==='reading' && (e.key===' '||e.key==='Enter')) closeNote();
+});
+window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false; });
+canvas.addEventListener('mousemove', e=>{ mouse.x = e.clientX; mouse.y = e.clientY; });
+ 
+function beginGame(){
+  initAudio();
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('hud').classList.remove('hidden');
+  document.getElementById('mute').classList.remove('hidden');
+  resetGame();
+  state = 'playing';
+  showToast("Remember: don't look at it.", 2600);
+  last = performance.now();
+  requestAnimationFrame(loop);
+}
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  if(sheetReady) beginGame();
+  else sheet.onload = () => { sheetReady = true; beginGame(); };
+});
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  document.getElementById('endScreen').classList.add('hidden');
+  resetGame();
+  state = 'playing';
+  last = performance.now();
+  requestAnimationFrame(loop);
+});
+document.getElementById('noteContinue').addEventListener('click', closeNote);
+document.getElementById('mute').addEventListener('click', ()=>{
+  muted = !muted;
+  document.getElementById('mute').textContent = 'sound: ' + (muted?'off':'on');
+  if(droneNodes) droneNodes.gain.gain.value = muted?0:0.02;
+});
+ 
+let pendingNoteIndex = -1;
+function openNote(i){
+  pendingNoteIndex = i;
+  document.getElementById('noteText').textContent = NOTE_TEXT[i];
+  document.getElementById('noteModal').classList.remove('hidden');
+  state = 'reading';
+}
+function closeNote(){
+  if(state!=='reading') return;
+  document.getElementById('noteModal').classList.add('hidden');
+  if(pendingNoteIndex>=0){ notes[pendingNoteIndex] = true; updateHUD(); }
+  pendingNoteIndex = -1;
+  state = 'playing';
+}
 })
