@@ -8,8 +8,8 @@ function startGame(gameName) {
        if(gameName==="Snake Game"){
         window.location.href = "snake_game.html";
        }
-       else if(gameName==="Rocket Shoot"){
-        window.location.href = "rocket_game.html";
+       else if(gameName==="Dont Look"){
+        window.location.href = "dont_look.html";
        }
       }
   }

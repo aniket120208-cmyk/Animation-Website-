@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="dont_look.css">
+    <title>Don't Look At It</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/13/13973.png">
+</head>
+<body>
+    <canvas id="game"></canvas>
+  <div id="hud" class="hidden">
+    <div class="item-line"><span id="dotA" class="dot"></span> Note I</div>
+    <div class="item-line"><span id="dotB" class="dot"></span> Note II</div>
+    <div class="item-line"><span id="dotC" class="dot"></span> Note III</div>
+    <div class="item-line"><span id="dotKey" class="dot"></span> Key</div>
+  </div>
+ 
+  <div id="dangerWrap"><div id="dangerBar"></div></div>
+  <div id="toasts"></div>
+  <div id="mute" class="hidden">sound: on</div>
+ 
+  <div id="startScreen" class="overlay">
+    <h1 class="title">DON'T LOOK AT IT</h1>
+    <p class="lede">You wake up on the floor of hawkins lab. The lights are dead and the door
+      behind you has sealed itself. Find three notes and the exit key, then get out.</p>
+    <p class="rule">Whatever you do — don't look at it.</p>
+    <div class="controls">
+      <div><span>WASD or arrows</span>move</div>
+      <div><span>mouse</span>aim your light</div>
+      <div><span>walk into it</span>pick things up</div>
+    </div>
+    <button class="go" id="startBtn">Wake up</button>
+  </div>
+ 
+  <div id="endScreen" class="overlay hidden">
+    <h1 class="title" id="endTitle">You looked.</h1>
+    <p class="lede" id="endLede">It saw you seeing it.</p>
+    <button class="go" id="restartBtn">Try again</button>
+  </div>
+ 
+  <div id="noteModal" class="hidden">
+    <div class="paper">
+      <p id="noteText"></p>
+      <button id="noteContinue">Continue</button>
+    </div>
+  </div>
+  <div id="flash"></div>
+  <script src="dont_look.js"></script>
+</body>
+</html>
