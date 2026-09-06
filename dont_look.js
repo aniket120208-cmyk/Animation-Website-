@@ -168,7 +168,7 @@ let toasts = [];
 let last = 0;
  
 const NOTE_TEXT = [
-  "Do not look at it more than half as second. It learns the shape of whatever watches it back.",
+  "Do not look at it more than half a second. It learns the shape of whatever watches it back.",
   "Dr. Salunkhe insisted we keep working after the incident. I told him the cameras don't show anything because there's nothing to show — it isn't there unless you make it there. Looking is what gives it a shape.",
   "Power's been cut to hawkins lab for six days. Something down here doesn't need light to move. It only needs you to give it your eyes."
 ];
@@ -371,5 +371,110 @@ function update(dt){
   bar.style.width = (frac*100)+'%';
   wrap.style.opacity = frac>0.03 ? 1 : 0;
 }
+let animT = 0;
+function render(dt){
+  animT += dt;
+  const w = canvas.width, h = canvas.height;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0,0,w,h);
+  let shakeX=0, shakeY=0;
+  if(shakeTimer>0){ shakeX=(Math.random()*2-1)*8; shakeY=(Math.random()*2-1)*8; }
+ 
+  ctx.save();
+  ctx.translate(Math.round(w/2 - player.x + shakeX), Math.round(h/2 - player.y + shakeY));
 
-})
+  for(let y=0;y<ROWS;y++){
+    for(let x=0;x<COLS;x++){
+      const wx=x*TILE, wy=y*TILE;
+      if(wx < player.x - w/2 - TILE*2 || wx > player.x + w/2 + TILE*2) continue;
+      if(wy < player.y - h/2 - TILE*2 || wy > player.y + h/2 + TILE*2) continue;
+      const isExit = Math.hypot(wx+TILE/2-POS.exit.x, wy+TILE/2-POS.exit.y) < TILE*1.4;
+      const s = grid[y][x]===1 ? SPR.wall : (isExit ? SPR.exitFloor : SPR.floor);
+      ctx.drawImage(sheet, s[0],s[1],s[2],s[3], wx,wy, TILE,TILE);
+    }
+  }
+
+  const bob = Math.sin(animT*2.4)*4;
+  POS.notes.forEach((p,i)=>{
+    if(notes[i]) return;
+    ctx.save(); ctx.translate(p.x,p.y+bob);
+    ctx.shadowColor='rgba(216,161,60,0.8)'; ctx.shadowBlur=16;
+    ctx.drawImage(sheet, ...SPR.note, -18,-18,36,36);
+    ctx.restore();
+  });
+  if(!hasKey){
+    ctx.save(); ctx.translate(POS.key.x, POS.key.y+bob);
+    ctx.shadowColor='rgba(111,214,201,0.85)'; ctx.shadowBlur=16;
+    ctx.drawImage(sheet, ...SPR.key, -18,-18,36,36);
+    ctx.restore();
+  }
+
+  const eFrame = (Math.floor(animT*2)%2===0) ? SPR.entityA : SPR.entityB;
+  ctx.save();
+  ctx.translate(entity.x, entity.y);
+  ctx.drawImage(sheet, ...eFrame, -20,-24,40,48);
+  ctx.restore();
+  const walking = (keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright']);
+  const pFrame = walking && Math.floor(animT*8)%2===0 ? SPR.playerWalk : SPR.playerIdle;
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.rotate(player.facing + Math.PI/2);
+  ctx.drawImage(sheet, ...pFrame, -18,-18,36,36);
+  ctx.restore();
+  ctx.restore();
+  fctx.clearRect(0,0,w,h);
+  fctx.fillStyle = 'rgba(0,0,0,0.965)';
+  fctx.fillRect(0,0,w,h);
+  fctx.globalCompositeOperation = 'destination-out'; // Erases the fog where we draw lights
+  const cx=w/2+shakeX, cy=h/2+shakeY;
+  const jitter = 1 + Math.sin(animT*11)*0.03 + (Math.random()-0.5)*0.02;
+  const ambGrad = fctx.createRadialGradient(cx,cy,0,cx,cy,AMBIENT_RADIUS*jitter);
+  ambGrad.addColorStop(0,'rgba(255,255,255,0.5)');
+  ambGrad.addColorStop(1,'rgba(255,255,255,0)');
+  fctx.fillStyle = ambGrad;
+  fctx.beginPath(); fctx.arc(cx,cy,AMBIENT_RADIUS*jitter,0,Math.PI*2); fctx.fill();
+  fctx.save();
+  fctx.translate(cx,cy);
+  fctx.rotate(player.facing);
+  const coneGrad = fctx.createRadialGradient(0,0,0,0,0,CONE_RANGE*jitter);
+  coneGrad.addColorStop(0,'rgba(255,255,255,0.92)');
+  coneGrad.addColorStop(0.7,'rgba(255,255,255,0.5)');
+  coneGrad.addColorStop(1,'rgba(255,255,255,0)');
+  fctx.fillStyle = coneGrad;
+  fctx.beginPath();
+  fctx.moveTo(0,0);
+  fctx.arc(0,0,CONE_RANGE*jitter, -CONE_HALF_ANGLE, CONE_HALF_ANGLE);
+  fctx.closePath();
+  fctx.fill();
+  fctx.restore();
+  fctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(fog,0,0);
+  const vg = ctx.createRadialGradient(w/2,h/2,h*0.25,w/2,h/2,h*0.75);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,0.55)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0,0,w,h);
+  const dist = Math.hypot(entity.x-player.x, entity.y-player.y);
+  const proximity = Math.max(0, 1-dist/DREAD_RANGE);
+  const redAlpha = proximity*0.12 + Math.min(1, seenTimer/SEEN_LIMIT)*0.4;
+  if(redAlpha > 0.01){
+    ctx.fillStyle = `rgba(120,10,10,${redAlpha})`;
+    ctx.fillRect(0,0,w,h);
+  }
+  if(flashAlpha > 0){
+    ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
+    ctx.fillRect(0,0,w,h);
+  }
+}
+function loop(now){
+  const dt = Math.min(0.05, (now-last)/1000);
+  last = now;
+  update(dt);
+  render(dt);
+  if(state==='playing' || state==='reading' || state==='dead'){
+    requestAnimationFrame(loop);
+  } else if(state==='won'){
+    render(dt);
+  }
+}
+})();
