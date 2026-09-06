@@ -92,4 +92,65 @@ function hasLineOfSight(x0,y0,x1,y1){
   }
   return true;
 }
+const SHEET_SRC = "spritesheet.png";
+const CELL = 64;
+const sheet = new Image();
+let sheetReady = false;
+sheet.onload = () => { sheetReady = true; };
+sheet.src = SHEET_SRC;
+ 
+function spriteCoords(cx,cy){ return [cx*CELL, cy*CELL, CELL, CELL]; }
+const SPR = {
+  playerIdle: spriteCoords(0,0), playerWalk: spriteCoords(1,0),
+  entityA: spriteCoords(0,1), entityB: spriteCoords(1,1),
+  note: spriteCoords(0,2), key: spriteCoords(1,2),
+  floor: spriteCoords(0,3), wall: spriteCoords(1,3), exitFloor: spriteCoords(2,3),
+};
+let actx = null, muted = false;
+let droneNodes = null;
+function initAudio(){
+  if(actx) return;
+  actx = new (window.AudioContext||window.webkitAudioContext)();
+  const osc = actx.createOscillator();
+  const gain = actx.createGain();
+  osc.type='sine'; osc.frequency.value = 52;
+  gain.gain.value = 0.02;
+  osc.connect(gain); gain.connect(actx.destination);
+  osc.start();
+  const lfo = actx.createOscillator();
+  const lfoGain = actx.createGain();
+  lfo.frequency.value = 0.13; lfoGain.gain.value = 0.012;
+  lfo.connect(lfoGain); lfoGain.connect(gain.gain);
+  lfo.start();
+  droneNodes = { osc, gain, lfo };
+}
+
+function tone(freq, dur, type, vol){
+  if(muted || !actx) return;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type||'sine'; o.frequency.value = freq;
+  g.gain.value = vol||0.05;
+  o.connect(g); g.connect(actx.destination);
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+  o.stop(actx.currentTime + dur + 0.02);
+}
+function playPickup(){ tone(660,0.12,'square',0.04); setTimeout(()=>tone(880,0.14,'square',0.04),90); }
+function playUnlockFail(){ tone(120,0.25,'sawtooth',0.05); }
+function playWin(){ tone(440,0.18,'sine',0.05); setTimeout(()=>tone(660,0.22,'sine',0.05),150); setTimeout(()=>tone(880,0.3,'sine',0.05),320); }
+function playDeath(){
+  if(muted || !actx) return;
+  const bufSize = actx.sampleRate*0.4;
+  const buf = actx.createBuffer(1,bufSize,actx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<bufSize;i++) data[i] = (Math.random()*2-1)*(1-i/bufSize);
+  const src = actx.createBufferSource(); src.buffer = buf;
+  const g = actx.createGain(); g.gain.value = 0.22;
+  src.connect(g); g.connect(actx.destination); src.start();
+  tone(220,0.5,'sawtooth',0.06);
+}
+function heartbeat(strength){
+  if(muted || !actx || strength<=0) return;
+  tone(70, 0.1, 'sine', 0.02+strength*0.05);
+}
 })
