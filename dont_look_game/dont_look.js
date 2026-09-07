@@ -92,7 +92,7 @@ function hasLineOfSight(x0,y0,x1,y1){
   }
   return true;
 }
-const SHEET_SRC = "spritesheet.png";
+const SHEET_SRC = "assets/spritesheet.png";
 const CELL = 64;
 const sheet = new Image();
 let sheetReady = false;

@@ -6,10 +6,10 @@ function startGame(gameName) {
     } else {
        localStorage.setItem('currentPlayer', playerName);
        if(gameName==="Snake Game"){
-        window.location.href = "snake_game.html";
+        window.location.href = "../snake_game/snake_game.html";
        }
        else if(gameName==="Dont Look"){
-        window.location.href = "dont_look.html";
+        window.location.href = "../dont_look_game/dont_look.html";
        }
       }
   }
