@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="home_page/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tiny5&display=swap" rel="stylesheet">
+    <title>Animation Website</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/13/13973.png">
+</head>
+<body>
+    <div class="dashboard">
+    <header>
+      <h1>PICK YOUR <span class="text-green">GAME</span></h1>
+      <p><span class="hello_player"><b>HELLO PLAYER !</b></span><br> Enter your name and start enjoying games.</p>
+    </header>
+   <div class="player-setup">
+      <label>SETUP_PLAYER_IDENTITY</label>
+      <div class="terminal-input">
+        <span class="arrow">></span>
+        <input type="text" id="playerName" placeholder="Enter Your Name" spellcheck="false">
+      </div>
+    </div>
+  <div class="cards-container">
+    <div class="card card-green">
+        <div class="card-image">
+            <img src="assets/snake-game.png" height="220" width="220" alt="snake-game">
+        </div>
+        <div class="card-content">
+          <h2>SNAKE GAME</h2>
+          <p>Play the snake game and survive as long as possible. You get to see your score update in real-time as you grow, and you can also adjust the speed of the snake to match your skill level.</p>
+          <div class="card-footer">
+            <div class="stats">
+              <small>CONTROLS<br><b>ARROW KEYS</b></small>
+              <small>GENRE<br><b>FUN</b></small>
+            </div>
+            <button class="btn btn-green" onclick="startGame('Snake Game')">PLAY NOW ▷</button>
+          </div>
+        </div>
+      </div>
+    <div class="card card-pink">
+        <div class="card-image">
+            <img src="assets/dont-look.png" height="220" width="400" alt="don't-look-at-it-game">
+        </div>
+        <div class="card-content">
+          <h2>DON'T LOOK AT IT</h2>
+          <p>You wake up on the floor of hawkins lab. The lights are dead and the door
+      behind you has sealed itself. Find three notes and the exit key, then get out. <small>Disclaimer:- Don't Look at "It".</small></p>
+          <div class="card-footer">
+            <div class="stats">
+              <small>CONTROLS<br><b>ARROW KEYS</b></small>
+              <small>GENRE<br><b>HORROR</b></small>
+            </div>
+            <button class="btn btn-pink" onclick="startGame('Dont Look')">PLAY NOW ▷</button>
+          </div>
+        </div>
+      </div>
+   </div>
+  </div>
+  <script src="home_page/script.js"></script>
+</body>
+</html>
